@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Job Tracker Settings</title>
+    <link rel="stylesheet" href="options.css" />
+</head>
+
+<body>
+    <main>
+        <h1>Job Tracker Settings</h1>
+        <p>Configure how the extension communicates with your Job Search application.</p>
+        <form id="settings-form">
+            <label>
+                API Endpoint
+                <input type="url" id="api-endpoint" placeholder="https://jobmaster.streamlit.app/api/jobs" required />
+            </label>
+            <button type="submit">Save settings</button>
+            <p id="settings-status" role="status"></p>
+        </form>
+    </main>
+
+    <script src="options.js"></script>
+</body>
+
+</html>
