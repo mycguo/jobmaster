@@ -55,18 +55,22 @@ export class PgVectorStore {
       const embedding = await this.embedding.embedQuery(text)
       const reducedEmbedding = await this.reduceDimensions(embedding)
 
-      // Store in database
-      const doc = await prisma.vectorDocument.create({
-        data: {
-          userId: this.userId,
-          collectionName: this.collectionName,
-          text,
-          embedding: JSON.stringify(reducedEmbedding),
-          metadata: metadata as any,
-        },
-      })
+      // Store in database using raw SQL (Prisma doesn't support vector type natively)
+      const embeddingString = `[${reducedEmbedding.join(",")}]`
+      const result = await prisma.$queryRawUnsafe<any[]>(
+        `
+        INSERT INTO vector_documents (user_id, collection_name, text, embedding, metadata)
+        VALUES ($1, $2, $3, $4::vector, $5)
+        RETURNING id
+        `,
+        this.userId,
+        this.collectionName,
+        text,
+        embeddingString,
+        JSON.stringify(metadata)
+      )
 
-      ids.push(doc.id)
+      ids.push(result[0].id)
     }
 
     return ids
