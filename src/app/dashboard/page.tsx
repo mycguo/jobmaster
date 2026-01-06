@@ -57,7 +57,7 @@ export default async function DashboardPage() {
           Welcome back, {session.user?.name?.split(" ")[0] || "there"}! 👋
         </h1>
         <p className="text-gray-600 mt-2">
-          Here's an overview of your job search progress
+          Here&apos;s an overview of your job search progress
         </p>
       </div>
 

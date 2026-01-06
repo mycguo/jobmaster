@@ -93,7 +93,7 @@ export default async function ApplicationsPage() {
           <CardContent className="space-y-4">
             <p className="text-gray-600">You can add applications by:</p>
             <ul className="list-disc list-inside space-y-2 text-gray-600">
-              <li>Using the "Add Application" button above</li>
+              <li>Using the &ldquo;Add Application&rdquo; button above</li>
               <li>Installing our Chrome extension for LinkedIn</li>
               <li>Chatting with the AI assistant</li>
             </ul>
