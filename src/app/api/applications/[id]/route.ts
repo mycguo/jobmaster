@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { ApplicationsDB } from "@/lib/db/applications"
+import { resolveSessionUserId } from "@/lib/user-ids"
 
 export async function GET(
   req: NextRequest,
@@ -14,11 +15,16 @@ export async function GET(
   try {
     const { id } = await params
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const db = new ApplicationsDB(session.user.id)
+    const userId = resolveSessionUserId(session)
+    console.log(
+      `[ApplicationsAPI][GET:${id}] email=${session.user.email || "unknown"} provider=${session.user.provider || "unknown"} resolvedUserId=${userId}`
+    )
+
+    const db = new ApplicationsDB(userId)
     const application = await db.getApplication(id)
 
     if (!application) {
@@ -45,13 +51,18 @@ export async function PATCH(
   try {
     const { id } = await params
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await req.json()
 
-    const db = new ApplicationsDB(session.user.id)
+    const userId = resolveSessionUserId(session)
+    console.log(
+      `[ApplicationsAPI][PATCH:${id}] email=${session.user.email || "unknown"} provider=${session.user.provider || "unknown"} resolvedUserId=${userId}`
+    )
+
+    const db = new ApplicationsDB(userId)
     const application = await db.updateApplication(id, body)
 
     if (!application) {
@@ -78,11 +89,16 @@ export async function DELETE(
   try {
     const { id } = await params
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const db = new ApplicationsDB(session.user.id)
+    const userId = resolveSessionUserId(session)
+    console.log(
+      `[ApplicationsAPI][DELETE:${id}] email=${session.user.email || "unknown"} provider=${session.user.provider || "unknown"} resolvedUserId=${userId}`
+    )
+
+    const db = new ApplicationsDB(userId)
     const success = await db.deleteApplication(id)
 
     if (!success) {
@@ -101,4 +117,3 @@ export async function DELETE(
     )
   }
 }
-

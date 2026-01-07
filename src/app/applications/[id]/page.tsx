@@ -5,6 +5,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { ApplicationsDB } from "@/lib/db/applications"
+import { resolveSessionUserId } from "@/lib/user-ids"
 import { notFound, redirect } from "next/navigation"
 import {
   Card,
@@ -29,7 +30,12 @@ export default async function ApplicationDetailPage({
     redirect("/login")
   }
 
-  const db = new ApplicationsDB(session.user.id)
+  const userId = resolveSessionUserId(session)
+  console.log(
+    `[ApplicationDetailPage] Using userId="${userId}" for provider=${session.user.provider || "unknown"}`
+  )
+
+  const db = new ApplicationsDB(userId)
   const application = await db.getApplication(id)
 
   if (!application) {
@@ -206,4 +212,3 @@ export default async function ApplicationDetailPage({
     </div>
   )
 }
-

@@ -6,6 +6,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { ApplicationsDB } from "@/lib/db/applications"
+import { resolveSessionUserId } from "@/lib/user-ids"
 import {
   Card,
   CardContent,
@@ -23,8 +24,13 @@ export default async function DashboardPage() {
     return <div>Unauthorized</div>
   }
 
+  const userId = resolveSessionUserId(session)
+  console.log(
+    `[Dashboard] Using userId="${userId}" for provider=${session.user.provider || "unknown"}`
+  )
+
   // Fetch applications
-  const db = new ApplicationsDB(session.user.id)
+  const db = new ApplicationsDB(userId)
   const applications = await db.listApplications()
   const stats = await db.getStats()
 
@@ -226,4 +232,3 @@ export default async function DashboardPage() {
     </div>
   )
 }
-

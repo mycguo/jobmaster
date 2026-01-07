@@ -1,10 +1,44 @@
 const JOB_REQUEST_EVENT = 'REQUEST_PAGE_CONTENT';
 
+function captureLinkedInJobContent() {
+    // Try to find the job details card on LinkedIn
+    // LinkedIn uses various selectors, so we try multiple
+    const selectors = [
+        '.jobs-details__main-content',
+        '.jobs-details',
+        '.job-view-layout',
+        '[class*="job-details"]',
+        '.jobs-search__job-details',
+        '.jobs-unified-top-card',
+        'main.jobs-search__job-details'
+    ];
+
+    for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element && element.innerText && element.innerText.length > 200) {
+            return element.innerText.trim();
+        }
+    }
+
+    return null;
+}
+
 function capturePageContent() {
     const title = document.title || null;
     const url = window.location.href;
     const selection = window.getSelection()?.toString().trim();
-    const bodyText = document.body ? document.body.innerText : '';
+
+    // For LinkedIn job pages, try to get specific job content
+    let bodyText = '';
+    if (url.includes('linkedin.com/jobs')) {
+        bodyText = captureLinkedInJobContent() || '';
+    }
+
+    // Fallback to full body text if no specific content found
+    if (!bodyText && document.body) {
+        bodyText = document.body.innerText;
+    }
+
     const primaryText = selection || bodyText;
 
     // Detect logged-in user handle and Member ID from LinkedIn

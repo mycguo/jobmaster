@@ -1,5 +1,5 @@
 const DEFAULT_EXTENSION_SETTINGS = {
-    apiEndpoint: "https://jobmaster.streamlit.app/api/jobs",
+    apiEndpoint: "http://localhost:3000/api/jobs",
     apiUserId: ""
 };
 
@@ -95,11 +95,15 @@ async function submitJobDetails(payload) {
         'Content-Type': 'application/json'
     };
 
+    const provider = payload.authProvider || payload.provider || 'linkedin';
+
     const body = {
         job_url: payload.jobUrl,
         page_title: payload.pageTitle,
         page_content: payload.pageContent,
         user_id: payload.userId || settings.apiUserId || undefined,
+        provider,
+        auth_provider: provider,
         linkedin_handle: payload.linkedinHandle || undefined,
         linkedin_member_id: payload.linkedinMemberId || undefined,
         status: 'tracking',

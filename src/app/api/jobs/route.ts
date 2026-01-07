@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { extractJobDetails } from "@/lib/ai/job-parser"
 import { ApplicationsDB } from "@/lib/db/applications"
+import { prisma } from "@/lib/prisma"
+import { normalizeExtensionUserId } from "@/lib/user-ids"
 
 export const dynamic = "force-dynamic"
 
@@ -23,7 +25,18 @@ export async function OPTIONS() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { job_url, jobUrl, page_content, pageContent, user_id, userId, notes, status } = body
+    const {
+      job_url,
+      jobUrl,
+      page_content,
+      pageContent,
+      user_id,
+      userId,
+      notes,
+      status,
+      provider,
+      auth_provider,
+    } = body
 
     // Extract values (support both snake_case and camelCase)
     const finalJobUrl = job_url || jobUrl
@@ -52,6 +65,33 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const providerHint =
+      auth_provider || provider || (finalJobUrl?.includes("linkedin.com") ? "linkedin" : undefined)
+
+    const normalizedUserId = normalizeExtensionUserId(finalUserId, {
+      provider: providerHint,
+      jobUrl: finalJobUrl,
+    })
+
+    // Log received content for debugging
+    console.log("Received page_content length:", finalPageContent.length)
+    console.log("Page content preview:", finalPageContent.substring(0, 300))
+    console.log("Job URL:", finalJobUrl)
+    console.log(
+      `Extension userId raw="${finalUserId}" normalized="${normalizedUserId}" provider=${providerHint || "unknown"}`
+    )
+
+    // Validate content length
+    if (finalPageContent.length < 100) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Insufficient content captured (${finalPageContent.length} chars). Please ensure you're on a job posting page and the extension has permission to access the content.`,
+        },
+        { status: 422, headers: corsHeaders }
+      )
+    }
+
     // Parse job details with AI
     const parsed = await extractJobDetails(finalPageContent, finalJobUrl)
 
@@ -65,8 +105,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create application
-    const db = new ApplicationsDB(finalUserId)
+    // Create application using LinkedIn email directly
+    const db = new ApplicationsDB(normalizedUserId)
     const application = await db.createApplication({
       company: parsed.company,
       role: parsed.role,
@@ -111,4 +151,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-

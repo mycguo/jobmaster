@@ -92,13 +92,18 @@ export class ApplicationsDB {
     status?: string
     company?: string
   }): Promise<Application[]> {
-    return await this.vectorStore.listRecords(
+    console.log(
+      `[ApplicationsDB] Listing applications for user: "${this.userId}" with filters=${JSON.stringify(filters || {})}`
+    )
+    const results = await this.vectorStore.listRecords(
       "application",
       filters,
       "appliedDate",
       true,
       1000
     )
+    console.log(`[ApplicationsDB] Found ${results.length} applications`)
+    return results
   }
 
   /**
@@ -261,4 +266,3 @@ ${app.notes ? `Notes: ${app.notes}` : ""}
     await this.vectorStore.addTexts([text], [metadata])
   }
 }
-

@@ -6,15 +6,21 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { ApplicationsDB } from "@/lib/db/applications"
+import { resolveSessionUserId } from "@/lib/user-ids"
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const db = new ApplicationsDB(session.user.id)
+    // Use email as user ID (matches what Chrome extension sends)
+    const userId = resolveSessionUserId(session)
+    console.log(
+      `[ApplicationsAPI][STATS] email=${session.user.email || "unknown"} provider=${session.user.provider || "unknown"} resolvedUserId=${userId}`
+    )
+    const db = new ApplicationsDB(userId)
     const stats = await db.getStats()
 
     return NextResponse.json({ stats })
@@ -26,4 +32,3 @@ export async function GET(req: NextRequest) {
     )
   }
 }
-

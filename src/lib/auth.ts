@@ -8,6 +8,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import GoogleProvider from "next-auth/providers/google"
 import LinkedInProvider from "next-auth/providers/linkedin"
 import { prisma } from "@/lib/prisma"
+import { buildVectorUserId } from "@/lib/user-ids"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -43,10 +44,70 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id
+    async jwt({ token, user, account }) {
+      if (account?.provider) {
+        token.provider = account.provider
       }
+
+      const provider = (token.provider as string | undefined) || account?.provider
+      const email = user?.email || (token.email as string | undefined)
+      const fallbackId = (user as any)?.id || token.sub || token.id
+
+      token.vectorUserId = buildVectorUserId({
+        provider,
+        email,
+        fallback: fallbackId,
+      })
+
+      return token
+    },
+    async session({ session, token, user }) {
+      if (!session.user) {
+        return session
+      }
+
+      const adapterUser = user as typeof user & {
+        provider?: string | null
+        vectorUserId?: string | null
+      }
+
+      const resolvedId = token?.sub || adapterUser?.id || session.user.id
+      if (resolvedId) {
+        session.user.id = resolvedId
+      }
+
+      let provider =
+        (token?.provider as string | undefined) ||
+        adapterUser?.provider ||
+        session.user.provider
+
+      let vectorUserId =
+        (token?.vectorUserId as string | undefined) ||
+        adapterUser?.vectorUserId ||
+        session.user.vectorUserId
+
+      if (!provider || !vectorUserId) {
+        const account = resolvedId
+          ? await prisma.account.findFirst({
+              where: { userId: resolvedId },
+              select: { provider: true },
+            })
+          : null
+
+        provider = provider || account?.provider || null
+        vectorUserId =
+          vectorUserId ||
+          buildVectorUserId({
+            provider,
+            email: session.user.email,
+            fallback: resolvedId,
+          })
+      }
+
+      session.user.provider = provider || null
+      session.user.vectorUserId =
+        vectorUserId || session.user.email || session.user.id
+
       return session
     },
   },
@@ -60,4 +121,3 @@ export const authOptions: NextAuthOptions = {
   },
   debug: process.env.NODE_ENV === "development",
 }
-

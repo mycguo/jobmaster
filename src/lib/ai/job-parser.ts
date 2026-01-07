@@ -13,41 +13,53 @@ export async function extractJobDetails(
   pageContent: string,
   jobUrl?: string
 ): Promise<ParsedJobDetails> {
-  const model = getModel(0.1)
+  const model = getModel(0.0)
 
-  const prompt = `Extract job details from this job posting in JSON format.
+  const contentPreview = pageContent.substring(0, 8000)
 
-Job Content:
-${pageContent.substring(0, 5000)}
+  const prompt = `You are a precise job posting parser. Extract job information from the text below.
 
-${jobUrl ? `Job URL: ${jobUrl}` : ""}
+${jobUrl ? `URL: ${jobUrl}\n\n` : ""}Job Posting Text:
+${contentPreview}
 
-Extract these fields:
-- company: Company name (required)
-- role: Job title/role (required)
-- description: Brief job description (1-2 sentences)
-- location: Location if mentioned
-- salary_range: Salary if mentioned
-- required_skills: Array of required skills
-- preferred_skills: Array of preferred skills
-- years_experience: Years of experience required
-- role_level: Job level (e.g., Junior, Mid, Senior, Staff, Principal)
+Extract the following information. Look carefully - the company name and job title are ALWAYS present in a job posting.
+Do NOT return null for company or role - extract them even if you have to infer from context.
 
-Return ONLY valid JSON with these exact keys. Be precise and concise.
-Example: {"company": "Google", "role": "ML Engineer", "description": "...", "location": "Remote", ...}`
+Return ONLY a JSON object with NO markdown formatting, NO explanations, NO additional text:
+{
+  "company": "exact company name (REQUIRED - extract from text)",
+  "role": "exact job title (REQUIRED - extract from text)",
+  "description": "brief summary of the role",
+  "location": "work location if mentioned",
+  "salary_range": "salary/compensation if mentioned",
+  "required_skills": ["skill1", "skill2"],
+  "preferred_skills": ["skill1"],
+  "years_experience": "years required",
+  "role_level": "seniority level"
+}`
 
+  let response: any
   try {
-    const response = await model.invoke(prompt)
+    response = await model.invoke(prompt)
     let content = response.content as string
 
-    // Extract JSON from response
-    if (content.includes("```json")) {
-      content = content.split("```json")[1].split("```")[0].trim()
-    } else if (content.includes("```")) {
-      content = content.split("```")[1].split("```")[0].trim()
+    // Try to extract JSON from various formats
+    let jsonContent = content.trim()
+
+    // Remove markdown code blocks
+    if (jsonContent.includes("```json")) {
+      jsonContent = jsonContent.split("```json")[1].split("```")[0].trim()
+    } else if (jsonContent.includes("```")) {
+      jsonContent = jsonContent.split("```")[1].split("```")[0].trim()
     }
 
-    const parsed = JSON.parse(content)
+    // Try to find JSON object if model added text
+    const jsonMatch = jsonContent.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      jsonContent = jsonMatch[0]
+    }
+
+    const parsed = JSON.parse(jsonContent)
 
     // Validate required fields
     if (!parsed.company || !parsed.role) {
@@ -72,7 +84,14 @@ Example: {"company": "Google", "role": "ML Engineer", "description": "...", "loc
     }
   } catch (error) {
     console.error("Error parsing job details:", error)
-    throw new Error("Failed to extract job details from content")
+    console.error("Content length:", pageContent.length)
+    console.error("Content preview (first 500 chars):", pageContent.substring(0, 500))
+    if (response?.content) {
+      console.error("Raw AI response:", response.content.toString().substring(0, 500))
+    }
+    throw new Error(
+      "Failed to extract job details. The page content may not contain a valid job posting."
+    )
   }
 }
 

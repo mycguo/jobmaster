@@ -60,7 +60,7 @@ export class PgVectorStore {
       const result = await prisma.$queryRawUnsafe<any[]>(
         `
         INSERT INTO vector_documents (user_id, collection_name, text, embedding, metadata)
-        VALUES ($1, $2, $3, $4::vector, $5)
+        VALUES ($1, $2, $3, $4::vector, $5::jsonb)
         RETURNING id
         `,
         this.userId,
@@ -170,6 +170,8 @@ export class PgVectorStore {
     reverse?: boolean,
     limit?: number
   ): Promise<any[]> {
+    console.log(`[VectorStore] Querying for userId="${this.userId}", collection="${this.collectionName}", recordType="${recordType}"`)
+
     const docs = await prisma.vectorDocument.findMany({
       where: {
         userId: this.userId,
@@ -185,16 +187,21 @@ export class PgVectorStore {
       },
     })
 
+    console.log(`[VectorStore] Raw query returned ${docs.length} documents`)
+
     // Extract data from metadata
     let results = docs.map((d: any) => d.metadata.data).filter(Boolean)
+    console.log(`[VectorStore] After extracting metadata.data: ${results.length} records`)
 
     // Apply filters (simple equality check)
     if (filters) {
+      console.log(`[VectorStore] Applying filters: ${JSON.stringify(filters)}`)
       results = results.filter((item) => {
         return Object.entries(filters).every(([key, value]) => {
           return item[key] === value
         })
       })
+      console.log(`[VectorStore] After filters: ${results.length} records`)
     }
 
     // Sort if specified
@@ -245,4 +252,3 @@ export class PgVectorStore {
     return embedding.slice(0, this.maxDimensions)
   }
 }
-

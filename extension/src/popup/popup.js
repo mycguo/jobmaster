@@ -13,7 +13,7 @@ let currentPageData = null;
 let currentSettings = null;
 const STORAGE_DEFAULTS = {
     apiUserId: '',
-    apiEndpoint: 'http://localhost:8501/api/jobs'
+    apiEndpoint: 'http://localhost:3000/api/jobs'
 };
 
 async function getSettings() {
@@ -136,7 +136,8 @@ function handleSaveClick() {
         pageTitle: currentPageData.title,
         pageContent: currentPageData.fullText,
         userId: userId,
-        notes: notesEl.value.trim()
+        notes: notesEl.value.trim(),
+        authProvider: 'linkedin'
     };
 
     chrome.runtime.sendMessage({ type: SAVE_EVENT, payload }, (response) => {
