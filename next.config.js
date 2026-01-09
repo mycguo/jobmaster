@@ -9,6 +9,7 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000'],
     },
+    serverComponentsExternalPackages: ['pdf-parse', 'mammoth'],
   },
   images: {
     remotePatterns: [
@@ -25,4 +26,3 @@ const nextConfig = {
 }
 
 module.exports = nextConfig
-
