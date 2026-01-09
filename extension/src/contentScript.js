@@ -1,25 +1,28 @@
 const JOB_REQUEST_EVENT = 'REQUEST_PAGE_CONTENT';
 
 function captureLinkedInJobContent() {
-    // Try to find the job details card on LinkedIn
-    // LinkedIn uses various selectors, so we try multiple
-    const selectors = [
-        '.jobs-details__main-content',
-        '.jobs-details',
-        '.job-view-layout',
-        '[class*="job-details"]',
-        '.jobs-search__job-details',
-        '.jobs-unified-top-card',
-        'main.jobs-search__job-details'
+    console.log('[Job Tracker] Capturing LinkedIn job content...');
+
+    // Try to get the full job details content - this contains everything
+    const contentSelectors = [
+        '.jobs-details__main-content',  // Main content area with job details
+        '.jobs-description__content',    // Job description area
+        '.jobs-details',                 // Full job details section
+        '.job-view-layout',              // Job view container
+        'main.jobs-search__job-details'  // Main job search details
     ];
 
-    for (const selector of selectors) {
+    for (const selector of contentSelectors) {
         const element = document.querySelector(selector);
         if (element && element.innerText && element.innerText.length > 200) {
-            return element.innerText.trim();
+            const content = element.innerText.trim();
+            console.log(`[Job Tracker] Captured ${content.length} characters using selector: ${selector}`);
+            console.log(`[Job Tracker] Content preview (first 300 chars):`, content.substring(0, 300));
+            return content;
         }
     }
 
+    console.log('[Job Tracker] ERROR: Could not find job content');
     return null;
 }
 

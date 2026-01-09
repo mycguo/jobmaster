@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { STATUS_DISPLAY, STATUS_EMOJI } from "@/types/application"
+import { TimelineSection } from "@/components/applications/timeline-section"
 
 export default async function ApplicationDetailPage({
   params,
@@ -166,27 +167,7 @@ export default async function ApplicationDetailPage({
       )}
 
       {/* Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle>📅 Timeline</CardTitle>
-          <CardDescription>Application history and events</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {application.timeline.map((event, idx) => (
-              <div key={idx} className="flex items-start space-x-4">
-                <div className="text-sm text-gray-600 w-24">{event.date}</div>
-                <div className="flex-1">
-                  <div className="font-medium capitalize">{event.eventType}</div>
-                  {event.notes && (
-                    <p className="text-sm text-gray-600">{event.notes}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <TimelineSection application={application} />
 
       {/* Notes */}
       {application.notes && (

@@ -15,10 +15,61 @@
         });
     }
 
+    function captureLinkedInJobContent() {
+        console.log('[Job Tracker Sidebar] === Starting LinkedIn job content capture ===');
+
+        // Try to get the full job details content - this contains everything
+        const contentSelectors = [
+            '.jobs-details__main-content',  // Main content area with job details
+            '.jobs-description__content',    // Job description area
+            '.jobs-details',                 // Full job details section
+            '.job-view-layout',              // Job view container
+            'main.jobs-search__job-details'  // Main job search details
+        ];
+
+        console.log('[Job Tracker Sidebar] Testing selectors...');
+        for (const selector of contentSelectors) {
+            const element = document.querySelector(selector);
+            console.log(`[Job Tracker Sidebar] Selector "${selector}":`, {
+                found: !!element,
+                hasInnerText: element ? !!element.innerText : false,
+                length: element?.innerText?.length || 0
+            });
+
+            if (element && element.innerText && element.innerText.length > 200) {
+                const content = element.innerText.trim();
+                console.log(`[Job Tracker Sidebar] ✓ SUCCESS - Captured ${content.length} characters using selector: ${selector}`);
+                console.log(`[Job Tracker Sidebar] Content preview (first 500 chars):`, content.substring(0, 500));
+                return content;
+            }
+        }
+
+        console.error('[Job Tracker Sidebar] ✗ ERROR: Could not find job content with any selector');
+        console.log('[Job Tracker Sidebar] Current URL:', window.location.href);
+        console.log('[Job Tracker Sidebar] Document ready state:', document.readyState);
+        return null;
+    }
+
     function capturePageContent() {
         const title = document.title || null;
         const url = window.location.href;
-        const bodyText = document.body ? document.body.innerText : '';
+
+        // Use the same LinkedIn-specific extraction as the popup
+        let bodyText = '';
+        if (url.includes('linkedin.com/jobs')) {
+            bodyText = captureLinkedInJobContent() || '';
+        } else {
+            // Only use fallback for non-LinkedIn pages
+            if (document.body) {
+                bodyText = document.body.innerText;
+            }
+        }
+
+        // For LinkedIn, if we didn't get content, return null to indicate failure
+        // Don't fall back to full body which includes navigation
+        if (url.includes('linkedin.com/jobs') && !bodyText) {
+            console.warn('[Job Tracker Sidebar] No job content found on LinkedIn job page');
+        }
 
         // Identity detection (same as contentScript.js)
         let linkedinHandle = null;
@@ -135,13 +186,19 @@
 
         currentSettings = await getSettings();
         userIdInput.value = currentSettings.apiUserId || '';
-        currentPageData = capturePageContent();
 
-        if (userIdInput.value.trim()) {
-            saveBtn.disabled = false;
-            setStatus('Ready to add this job.');
+        // Check if we can capture content (but don't store it yet - capture fresh on save)
+        const testCapture = capturePageContent();
+        if (testCapture && testCapture.fullText && testCapture.fullText.length > 200) {
+            if (userIdInput.value.trim()) {
+                saveBtn.disabled = false;
+                setStatus('Ready to add this job.');
+            } else {
+                setStatus('Account email required.', 'warning');
+            }
         } else {
-            setStatus('Account email required.', 'warning');
+            saveBtn.disabled = true;
+            setStatus('No job content found. Please scroll the page.', 'warning');
         }
 
         // --- Events ---
@@ -170,6 +227,46 @@
             }
 
             saveBtn.disabled = true;
+            setStatus('Capturing job content...');
+
+            // Retry logic - wait for content to load
+            let currentPageData = null;
+            let attempts = 0;
+            const maxAttempts = 5;
+
+            while (attempts < maxAttempts) {
+                currentPageData = capturePageContent();
+
+                // Check if we got good content (not just navigation/header)
+                if (currentPageData &&
+                    currentPageData.fullText &&
+                    currentPageData.fullText.length > 1000 && // Need substantial content
+                    !currentPageData.fullText.includes('Loading job details')) { // Job must be loaded
+                    console.log(`[Job Tracker Sidebar] ✓ Content captured on attempt ${attempts + 1}`);
+                    break;
+                }
+
+                console.log(`[Job Tracker Sidebar] Attempt ${attempts + 1}/${maxAttempts}: Content not ready (length: ${currentPageData?.fullText?.length || 0})`);
+
+                if (attempts < maxAttempts - 1) {
+                    setStatus(`Waiting for job to load... (${attempts + 1}/${maxAttempts})`);
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
+                }
+                attempts++;
+            }
+
+            if (!currentPageData || !currentPageData.fullText || currentPageData.fullText.length < 1000) {
+                saveBtn.disabled = false;
+                setStatus('Job content not loaded yet. Please wait for the job to fully load and try again.', 'error');
+                console.error('[Job Tracker Sidebar] Failed to capture content after', maxAttempts, 'attempts');
+                return;
+            }
+
+            console.log('[Job Tracker Sidebar] Captured fresh content:', {
+                length: currentPageData.fullText.length,
+                preview: currentPageData.fullText.substring(0, 300)
+            });
+
             setStatus('Sending job to JobMaster...');
 
             const payload = {
@@ -181,7 +278,17 @@
                 notes: ''
             };
 
+            console.log('[Job Tracker Sidebar] Sending payload to API:', {
+                jobUrl: payload.jobUrl,
+                pageTitle: payload.pageTitle,
+                contentLength: payload.pageContent?.length,
+                contentPreview: payload.pageContent?.substring(0, 200),
+                userId: payload.userId
+            });
+
             chrome.runtime.sendMessage({ type: SAVE_EVENT, payload }, (response) => {
+                console.log('[Job Tracker Sidebar] API response:', response);
+
                 saveBtn.disabled = false;
                 if (response && response.success) {
                     setStatus('Job added successfully! 🎉', 'success');

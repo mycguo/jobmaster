@@ -12,7 +12,7 @@ import { createStuffDocumentsChain } from "langchain/chains/combine_documents"
  */
 export async function getChatChain() {
   const model = new ChatGoogleGenerativeAI({
-    modelName: "gemini-2.0-flash-exp",
+    modelName: "gemini-2.5-flash",
     temperature: 0.0,
     apiKey: process.env.GOOGLE_API_KEY,
   })
@@ -48,7 +48,7 @@ export async function getChatChain() {
  */
 export function getModel(temperature: number = 0.0) {
   return new ChatGoogleGenerativeAI({
-    modelName: "gemini-2.0-flash-exp",
+    modelName: "gemini-2.5-flash",
     temperature,
     apiKey: process.env.GOOGLE_API_KEY,
   })

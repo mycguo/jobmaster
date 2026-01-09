@@ -13,30 +13,28 @@ export async function extractJobDetails(
   pageContent: string,
   jobUrl?: string
 ): Promise<ParsedJobDetails> {
-  const model = getModel(0.0)
+  const model = getModel(0.1) // Match Python's temperature
 
-  const contentPreview = pageContent.substring(0, 8000)
+  // Use larger content window like Python (32000 chars)
+  const contentPreview = pageContent.substring(0, 32000)
 
-  const prompt = `You are a precise job posting parser. Extract job information from the text below.
+  // Log preview for debugging
+  console.log('[Job Parser] Processing content, length:', pageContent.length)
+  console.log('[Job Parser] First 300 chars:', contentPreview.substring(0, 300))
 
-${jobUrl ? `URL: ${jobUrl}\n\n` : ""}Job Posting Text:
+  // Use the same prompt approach as the Python version
+  const prompt = `You are a structured data extraction assistant specialized in job postings.
+Extract the job application details from the provided job page content. LinkedIn pages often contain multiple jobs in a list; focus on the primary or currently selected job details.
+Look carefully for 'company' and 'role' (job title) symbols or text in headers or side panels.
+Return ONLY valid JSON with the following keys: company, role, location, description, salary_range, required_skills, preferred_skills, years_experience, role_level.
+If a field is missing, set it to null.
+
+Job URL: ${jobUrl || "unknown"}
+
+Job Page Content:
 ${contentPreview}
 
-Extract the following information. Look carefully - the company name and job title are ALWAYS present in a job posting.
-Do NOT return null for company or role - extract them even if you have to infer from context.
-
-Return ONLY a JSON object with NO markdown formatting, NO explanations, NO additional text:
-{
-  "company": "exact company name (REQUIRED - extract from text)",
-  "role": "exact job title (REQUIRED - extract from text)",
-  "description": "brief summary of the role",
-  "location": "work location if mentioned",
-  "salary_range": "salary/compensation if mentioned",
-  "required_skills": ["skill1", "skill2"],
-  "preferred_skills": ["skill1"],
-  "years_experience": "years required",
-  "role_level": "seniority level"
-}`
+JSON:`
 
   let response: any
   try {
@@ -61,24 +59,48 @@ Return ONLY a JSON object with NO markdown formatting, NO explanations, NO addit
 
     const parsed = JSON.parse(jsonContent)
 
-    // Validate required fields
-    if (!parsed.company || !parsed.role) {
-      throw new Error("Missing required fields: company or role")
-    }
-
-    return {
+    // Log what AI extracted
+    console.log('[Job Parser] AI extracted:', {
       company: parsed.company,
       role: parsed.role,
-      description: parsed.description,
-      location: parsed.location,
-      salaryRange: parsed.salary_range,
+      location: parsed.location
+    })
+
+    // Clean values like Python version
+    const cleanValue = (val: any): string | undefined => {
+      if (val === null || val === undefined || val === "" ||
+          (Array.isArray(val) && val.length === 0) ||
+          (typeof val === "object" && Object.keys(val).length === 0)) {
+        return undefined
+      }
+      return String(val).trim()
+    }
+
+    const company = cleanValue(parsed.company)
+    const role = cleanValue(parsed.role)
+
+    // Basic validation - just ensure we have company and role
+    if (!company || !role) {
+      console.error('[Job Parser] Missing required fields:', { company, role })
+      throw new Error("Failed to extract company or role from job content")
+    }
+
+    console.log('[Job Parser] ✓ Validation passed')
+
+    // Return cleaned values matching Python structure
+    return {
+      company: company,
+      role: role,
+      description: cleanValue(parsed.description),
+      location: cleanValue(parsed.location),
+      salaryRange: cleanValue(parsed.salary_range),
       applyUrl: jobUrl,
-      requirements: parsed.required_skills
+      requirements: parsed.required_skills || parsed.preferred_skills || parsed.years_experience || parsed.role_level
         ? {
-            required_skills: parsed.required_skills || [],
-            preferred_skills: parsed.preferred_skills || [],
-            years_experience: parsed.years_experience,
-            role_level: parsed.role_level,
+            required_skills: Array.isArray(parsed.required_skills) ? parsed.required_skills : [],
+            preferred_skills: Array.isArray(parsed.preferred_skills) ? parsed.preferred_skills : [],
+            years_experience: cleanValue(parsed.years_experience),
+            role_level: cleanValue(parsed.role_level),
           }
         : undefined,
     }
