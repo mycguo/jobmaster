@@ -9,6 +9,7 @@ import type { Application } from "@/types/application"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface TimelineSectionProps {
   application: Application
@@ -18,6 +19,7 @@ export function TimelineSection({ application }: TimelineSectionProps) {
   const router = useRouter()
   const [isAdding, setIsAdding] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [formData, setFormData] = useState({
     eventType: "interview",
     date: new Date().toISOString().split("T")[0],
@@ -34,7 +36,13 @@ export function TimelineSection({ application }: TimelineSectionProps) {
       // Format notes with time and interviewer
       let notes = ""
       if (formData.time) {
-        notes += `Time: ${formData.time}\n`
+        // Convert 24-hour time to 12-hour format with AM/PM
+        const [hours, minutes] = formData.time.split(':')
+        const hour = parseInt(hours)
+        const ampm = hour >= 12 ? 'PM' : 'AM'
+        const hour12 = hour % 12 || 12
+        const formattedTime = `${hour12}:${minutes} ${ampm}`
+        notes += `Time: ${formattedTime}\n`
       }
       if (formData.interviewer) {
         notes += `Interviewer: ${formData.interviewer}\n`
@@ -57,7 +65,7 @@ export function TimelineSection({ application }: TimelineSectionProps) {
         throw new Error("Failed to add event")
       }
 
-      // Reset form and close
+      // Reset form and show success message
       setFormData({
         eventType: "interview",
         date: new Date().toISOString().split("T")[0],
@@ -66,9 +74,13 @@ export function TimelineSection({ application }: TimelineSectionProps) {
         notes: "",
       })
       setIsAdding(false)
+      setShowSuccess(true)
 
       // Refresh the page to show new event
       router.refresh()
+
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowSuccess(false), 5000)
     } catch (error) {
       console.error("Error adding event:", error)
       alert("Failed to add event. Please try again.")
@@ -94,6 +106,30 @@ export function TimelineSection({ application }: TimelineSectionProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Success Message */}
+        {showSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-green-800 font-medium">✅ Event added successfully!</p>
+                <p className="text-sm text-green-700 mt-1">
+                  View all your interviews on the{" "}
+                  <Link href="/interviews" className="underline font-medium hover:text-green-900">
+                    Interview Schedule
+                  </Link>{" "}
+                  page.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSuccess(false)}
+                className="text-green-600 hover:text-green-800"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Add Event Form */}
         {isAdding && (
           <Card className="bg-blue-50 border-blue-200">

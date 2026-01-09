@@ -20,7 +20,7 @@ export interface Interview {
 
 export type InterviewCategory = "Today" | "Tomorrow" | "This Week" | "This Month" | "Upcoming" | "Past" | "Other"
 
-const INTERVIEW_KEYWORDS = ['interview', 'screening', 'phone_screen', 'technical', 'behavioral', 'onsite']
+const INTERVIEW_KEYWORDS = ['interview', 'screening', 'phone_screen', 'phone', 'video', 'technical', 'behavioral', 'onsite']
 
 /**
  * Parse interview information from a timeline event
