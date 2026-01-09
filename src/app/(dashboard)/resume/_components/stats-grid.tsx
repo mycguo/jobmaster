@@ -53,21 +53,6 @@ export function ResumeStatsGrid({ stats }: StatsGridProps) {
           </CardContent>
         </Card>
       ))}
-
-      <Card className="md:col-span-2 lg:col-span-1">
-        <CardHeader className="pb-2">
-          <CardDescription>Most Used Resume</CardDescription>
-          <CardTitle className="text-xl">
-            {stats.mostUsedResume || "No data yet"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {stats.totalApplications} tracked applications
-          </p>
-        </CardContent>
-      </Card>
     </div>
   )
 }
-

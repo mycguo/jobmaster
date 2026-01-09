@@ -76,6 +76,49 @@ export class PgVectorStore {
     return ids
   }
 
+  async deleteByMetadata(filter: Record<string, any>): Promise<number> {
+    const entries = Object.entries(filter || {})
+    if (entries.length === 0) {
+      return 0
+    }
+
+    const conditions = entries.map(([key], index) => {
+      if (!/^[a-zA-Z0-9_]+$/.test(key)) {
+        throw new Error(`Invalid metadata key: ${key}`)
+      }
+      return `metadata ->> '${key}' = $${index + 3}`
+    })
+
+    const query = `
+      DELETE FROM vector_documents
+      WHERE user_id = $1
+        AND collection_name = $2
+        AND ${conditions.join(" AND ")}
+      RETURNING id
+    `
+
+    const values = entries.map(([, value]) => String(value))
+    const deleted = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      query,
+      this.userId,
+      this.collectionName,
+      ...values
+    )
+
+    return deleted.length
+  }
+
+  async upsertRecord(
+    text: string,
+    metadata: VectorMetadata & { record_type: string; record_id: string }
+  ): Promise<void> {
+    await this.deleteByMetadata({
+      record_type: metadata.record_type,
+      record_id: metadata.record_id,
+    })
+    await this.addTexts([text], [metadata])
+  }
+
   /**
    * Similarity search
    */
