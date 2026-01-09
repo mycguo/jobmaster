@@ -167,9 +167,9 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {applications.slice(0, 5).map((app) => (
+              {applications.slice(0, 5).map((app, index) => (
                 <div
-                  key={app.id}
+                  key={`${app.id}-${index}`}
                   className="flex items-center justify-between py-3 border-b last:border-0"
                 >
                   <div>
