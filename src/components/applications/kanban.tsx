@@ -68,8 +68,8 @@ export function ApplicationKanban({ applications }: KanbanProps) {
 
             {/* Application Cards */}
             <div className="space-y-3">
-              {column.apps.map((app) => (
-                <Link key={app.id} href={`/applications/${app.id}`}>
+              {column.apps.map((app, index) => (
+                <Link key={`${app.id}-${column.status}-${index}`} href={`/applications/${app.id}`}>
                   <Card
                     className={`cursor-pointer hover:shadow-md transition-shadow ${
                       STATUS_COLORS[app.status as keyof typeof STATUS_COLORS]
@@ -106,8 +106,8 @@ export function ApplicationKanban({ applications }: KanbanProps) {
             📦 Archived Applications ({archivedApps.length})
           </summary>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {archivedApps.map((app) => (
-              <Link key={app.id} href={`/applications/${app.id}`}>
+            {archivedApps.map((app, index) => (
+              <Link key={`${app.id}-archived-${index}`} href={`/applications/${app.id}`}>
                 <Card className="cursor-pointer hover:shadow-md transition-shadow">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">{app.company}</CardTitle>
@@ -129,4 +129,3 @@ export function ApplicationKanban({ applications }: KanbanProps) {
     </div>
   )
 }
-
