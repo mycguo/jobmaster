@@ -58,7 +58,7 @@ export default async function InterviewPrepPage() {
         </p>
       </div>
 
-      <QuestionStats stats={stats} />
+      <QuestionStats stats={stats} basePath="/interview-prep" />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <AddQuestionForm />

@@ -37,24 +37,12 @@ export function AddQuestionForm() {
     setErrorMessage(null)
 
     const formData = new FormData(event.currentTarget)
-    const tags = (formData.get("tags") as string)
-      ?.split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean)
-    const companies = (formData.get("companies") as string)
-      ?.split(",")
-      .map((company) => company.trim())
-      .filter(Boolean)
-
     const payload = {
       question: formData.get("question"),
       category: formData.get("category"),
       type: formData.get("type"),
       difficulty: formData.get("difficulty"),
       answerFull: formData.get("answerFull"),
-      notes: formData.get("notes") || undefined,
-      tags,
-      companies,
       confidenceLevel: Number(formData.get("confidenceLevel")) || 3,
       importance: Number(formData.get("importance")) || 5,
     }
@@ -157,30 +145,8 @@ export function AddQuestionForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-sm font-medium">Tags</label>
-              <input
-                name="tags"
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-                placeholder="leadership, metrics, debugging"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Separate with commas to group similar questions.
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Companies</label>
-              <input
-                name="companies"
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-                placeholder="Amazon, Stripe"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Helps filter by company-specific prep.
-              </p>
-            </div>
+          <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-muted-foreground">
+            For now, tags and company filters can be added later through the question workspace edit panel.
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -208,16 +174,6 @@ export function AddQuestionForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Notes</label>
-            <textarea
-              name="notes"
-              rows={3}
-              className="w-full rounded-md border border-gray-300 px-3 py-2"
-              placeholder="Context, interviewer reactions, or reminders."
-            />
-          </div>
-
           {successMessage && (
             <p className="text-sm text-green-600">{successMessage}</p>
           )}
@@ -233,4 +189,3 @@ export function AddQuestionForm() {
     </Card>
   )
 }
-

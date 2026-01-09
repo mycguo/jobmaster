@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { InterviewQuestionRecord } from "@/types/interview"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,6 +25,8 @@ const TYPE_FILTERS = [
   { label: "Case Study", value: "case-study" },
 ]
 
+const VALID_TYPES = TYPE_FILTERS.map((filter) => filter.value)
+
 const DIFFICULTY_FILTERS = [
   { label: "All", value: "all" },
   { label: "Easy", value: "easy" },
@@ -34,6 +36,8 @@ const DIFFICULTY_FILTERS = [
 
 export function QuestionWorkspace({ questions }: QuestionWorkspaceProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
   const [items, setItems] = useState<InterviewQuestionRecord[]>(questions)
   const [selectedId, setSelectedId] = useState<string | null>(
     questions[0]?.id || null
@@ -51,6 +55,13 @@ export function QuestionWorkspace({ questions }: QuestionWorkspaceProps) {
       setSelectedId(questions[0].id)
     }
   }, [questions, selectedId])
+
+  useEffect(() => {
+    const paramType = searchParams.get("type") || "all"
+    if (VALID_TYPES.includes(paramType) && paramType !== typeFilter) {
+      setTypeFilter(paramType)
+    }
+  }, [searchParams, typeFilter])
 
   const selectedQuestion = items.find((question) => question.id === selectedId) || null
 
@@ -128,14 +139,32 @@ export function QuestionWorkspace({ questions }: QuestionWorkspaceProps) {
     }
   }
 
+  const handleTypeChange = (value: string) => {
+    if (!VALID_TYPES.includes(value)) return
+    setTypeFilter(value)
+    const params = new URLSearchParams(searchParams.toString())
+    if (value === "all") {
+      params.delete("type")
+    } else {
+      params.set("type", value)
+    }
+    const queryString = params.toString()
+    router.replace(
+      queryString
+        ? `${pathname}?${queryString}#question-workspace`
+        : `${pathname}#question-workspace`,
+      { scroll: false }
+    )
+  }
+
   return (
-    <div className="space-y-6">
+    <div id="question-workspace" className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
           {TYPE_FILTERS.map((filter) => (
             <button
               key={filter.value}
-              onClick={() => setTypeFilter(filter.value)}
+              onClick={() => handleTypeChange(filter.value)}
               className={cn(
                 "rounded-full border px-4 py-1 text-sm",
                 typeFilter === filter.value
@@ -299,4 +328,3 @@ export function QuestionWorkspace({ questions }: QuestionWorkspaceProps) {
     </div>
   )
 }
-
