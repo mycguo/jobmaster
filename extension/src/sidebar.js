@@ -65,10 +65,9 @@
             }
         }
 
-        // For LinkedIn, if we didn't get content, return null to indicate failure
-        // Don't fall back to full body which includes navigation
-        if (url.includes('linkedin.com/jobs') && !bodyText) {
-            console.warn('[Job Tracker Sidebar] No job content found on LinkedIn job page');
+        // For LinkedIn, if we didn't get content, try fallback
+        if (!bodyText && document.body) {
+            bodyText = document.body.innerText;
         }
 
         // Identity detection (same as contentScript.js)
@@ -255,7 +254,7 @@
                 attempts++;
             }
 
-            if (!currentPageData || !currentPageData.fullText || currentPageData.fullText.length < 1000) {
+            if (!currentPageData || !currentPageData.fullText || currentPageData.fullText.length < 500) { // Relaxed length check
                 saveBtn.disabled = false;
                 setStatus('Job content not loaded yet. Please wait for the job to fully load and try again.', 'error');
                 console.error('[Job Tracker Sidebar] Failed to capture content after', maxAttempts, 'attempts');
@@ -275,7 +274,8 @@
                 pageTitle: currentPageData.title,
                 pageContent: currentPageData.fullText,
                 userId: userId,
-                notes: ''
+                notes: '',
+                authProvider: 'linkedin'
             };
 
             console.log('[Job Tracker Sidebar] Sending payload to API:', {

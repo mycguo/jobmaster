@@ -7,6 +7,7 @@ import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { DashboardNav } from "@/components/dashboard-nav"
 
 export default async function DashboardLayout({
   children,
@@ -31,38 +32,7 @@ export default async function DashboardLayout({
                 <span className="text-xl font-bold">Job Search Agent</span>
               </Link>
 
-              <nav className="hidden md:flex space-x-6">
-                <Link
-                  href="/dashboard"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/applications"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Applications
-                </Link>
-                <Link
-                  href="/resume"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Resume
-                </Link>
-                <Link
-                  href="/interview-prep"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Interview Prep
-                </Link>
-                <Link
-                  href="/interviews"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Schedule
-                </Link>
-              </nav>
+              <DashboardNav />
             </div>
 
             <div className="flex items-center space-x-4">

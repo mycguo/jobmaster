@@ -19,6 +19,8 @@ import Link from "next/link"
 import { STATUS_DISPLAY, STATUS_EMOJI } from "@/types/application"
 import { TimelineSection } from "@/components/applications/timeline-section"
 import { DeleteButton } from "@/components/applications/delete-button"
+import { AnalyzeButton } from "@/components/applications/analyze-button"
+import { ContactSection } from "@/components/applications/contact-section"
 
 export default async function ApplicationDetailPage({
   params,
@@ -142,30 +144,55 @@ export default async function ApplicationDetailPage({
                       ? "👍 Good match"
                       : "⚠️ Moderate match"}
                 </p>
+                <AnalyzeButton applicationId={application.id} hasExistingScore={true} />
               </div>
             ) : (
               <div className="text-center py-4">
                 <p className="text-gray-600 mb-4">Not analyzed yet</p>
-                <Button>Run AI Analysis</Button>
+                <AnalyzeButton applicationId={application.id} />
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Job Description */}
-      {application.jobDescription && (
-        <Card>
-          <CardHeader>
-            <CardTitle>📝 Job Description</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="max-h-96 overflow-y-auto whitespace-pre-wrap text-sm text-gray-700">
-              {application.jobDescription}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Contacts and Job Description */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Contacts */}
+        <div className="space-y-6">
+          {/* Recruiter Contact */}
+          <ContactSection
+            applicationId={application.id}
+            title="Recruiter Contact"
+            icon="👤"
+            contact={application.recruiterContact}
+            contactType="recruiter"
+          />
+
+          {/* Hiring Manager Contact */}
+          <ContactSection
+            applicationId={application.id}
+            title="Hiring Manager Contact"
+            icon="💼"
+            contact={application.hiringManagerContact}
+            contactType="hiringManager"
+          />
+        </div>
+
+        {/* Job Description */}
+        {application.jobDescription && (
+          <Card>
+            <CardHeader>
+              <CardTitle>📝 Job Description</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-80 overflow-y-auto whitespace-pre-wrap text-sm text-gray-700">
+                {application.jobDescription}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Timeline */}
       <TimelineSection application={application} />

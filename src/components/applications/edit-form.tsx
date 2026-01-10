@@ -28,6 +28,14 @@ export function EditForm({ application }: EditFormProps) {
     jobUrl: application.jobUrl || "",
     jobDescription: application.jobDescription || "",
     notes: application.notes || "",
+    recruiterName: application.recruiterContact?.name || "",
+    recruiterEmail: application.recruiterContact?.email || "",
+    recruiterUrl: application.recruiterContact?.url || "",
+    recruiterNotes: application.recruiterContact?.notes || "",
+    hiringManagerName: application.hiringManagerContact?.name || "",
+    hiringManagerEmail: application.hiringManagerContact?.email || "",
+    hiringManagerUrl: application.hiringManagerContact?.url || "",
+    hiringManagerNotes: application.hiringManagerContact?.notes || "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +43,33 @@ export function EditForm({ application }: EditFormProps) {
     setIsSubmitting(true)
 
     try {
+      // Build contact objects
+      const recruiterContact =
+        formData.recruiterName ||
+        formData.recruiterEmail ||
+        formData.recruiterUrl ||
+        formData.recruiterNotes
+          ? {
+              name: formData.recruiterName || undefined,
+              email: formData.recruiterEmail || undefined,
+              url: formData.recruiterUrl || undefined,
+              notes: formData.recruiterNotes || undefined,
+            }
+          : undefined
+
+      const hiringManagerContact =
+        formData.hiringManagerName ||
+        formData.hiringManagerEmail ||
+        formData.hiringManagerUrl ||
+        formData.hiringManagerNotes
+          ? {
+              name: formData.hiringManagerName || undefined,
+              email: formData.hiringManagerEmail || undefined,
+              url: formData.hiringManagerUrl || undefined,
+              notes: formData.hiringManagerNotes || undefined,
+            }
+          : undefined
+
       const response = await fetch(`/api/applications/${application.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -48,6 +83,8 @@ export function EditForm({ application }: EditFormProps) {
           jobUrl: formData.jobUrl || undefined,
           jobDescription: formData.jobDescription || undefined,
           notes: formData.notes || undefined,
+          recruiterContact,
+          hiringManagerContact,
         }),
       })
 
@@ -234,6 +271,142 @@ export function EditForm({ application }: EditFormProps) {
           />
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>👤 Recruiter Contact</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                value={formData.recruiterName}
+                onChange={(e) =>
+                  setFormData({ ...formData, recruiterName: e.target.value })
+                }
+                placeholder="e.g., Jane Smith"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.recruiterEmail}
+                onChange={(e) =>
+                  setFormData({ ...formData, recruiterEmail: e.target.value })
+                }
+                placeholder="recruiter@company.com"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                LinkedIn URL
+              </label>
+              <input
+                type="url"
+                value={formData.recruiterUrl}
+                onChange={(e) =>
+                  setFormData({ ...formData, recruiterUrl: e.target.value })
+                }
+                placeholder="https://linkedin.com/in/..."
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Notes
+              </label>
+              <textarea
+                value={formData.recruiterNotes}
+                onChange={(e) =>
+                  setFormData({ ...formData, recruiterNotes: e.target.value })
+                }
+                placeholder="Additional notes about the recruiter..."
+                className="w-full px-3 py-2 border rounded-md"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>💼 Hiring Manager Contact</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                value={formData.hiringManagerName}
+                onChange={(e) =>
+                  setFormData({ ...formData, hiringManagerName: e.target.value })
+                }
+                placeholder="e.g., John Doe"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.hiringManagerEmail}
+                onChange={(e) =>
+                  setFormData({ ...formData, hiringManagerEmail: e.target.value })
+                }
+                placeholder="manager@company.com"
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                LinkedIn URL
+              </label>
+              <input
+                type="url"
+                value={formData.hiringManagerUrl}
+                onChange={(e) =>
+                  setFormData({ ...formData, hiringManagerUrl: e.target.value })
+                }
+                placeholder="https://linkedin.com/in/..."
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Notes
+              </label>
+              <textarea
+                value={formData.hiringManagerNotes}
+                onChange={(e) =>
+                  setFormData({ ...formData, hiringManagerNotes: e.target.value })
+                }
+                placeholder="Additional notes about the hiring manager..."
+                className="w-full px-3 py-2 border rounded-md"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="flex gap-4">
         <Button type="submit" disabled={isSubmitting}>
