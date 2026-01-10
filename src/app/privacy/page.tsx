@@ -6,8 +6,8 @@ export default function PrivacyPolicy() {
       <h1>Privacy Policy</h1>
       <p>Effective date: January 10, 2026</p>
       <p>
-        JobMaster ("we", "us", or "our") operates the JobMaster Chrome extension and the associated web
-        application (the "Service"). This Privacy Policy explains how we collect, use, disclose, and protect
+        JobMaster (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) operates the JobMaster Chrome extension and the associated web
+        application (the &quot;Service&quot;). This Privacy Policy explains how we collect, use, disclose, and protect
         your information when you use our Service.
       </p>
 
