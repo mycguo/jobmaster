@@ -158,7 +158,7 @@
                     <div class="jt-brand">
                         <img src="${chrome.runtime.getURL('assets/icons/icon48.png')}" alt="Job Tracker" />
                         <div>
-                            <h2>Job Tracker v2</h2>
+                            <h2>Job Tracker</h2>
                             <p>Log this LinkedIn opportunity</p>
                         </div>
                     </div>
@@ -171,7 +171,7 @@
                 </div>
 
                 <div class="jt-actions">
-                    <button id="jt-save-btn" disabled>Add to https://jobmaster.streamlit.app/</button>
+                    <button id="jt-save-btn" disabled>Send to https://jobmaster.vercel.app</button>
                     <p id="jt-status-message" class="status"></p>
                 </div>
             </section>

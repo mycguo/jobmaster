@@ -80,16 +80,6 @@ export async function POST(req: NextRequest) {
     console.log(
       `Extension userId raw="${finalUserId}" normalized="${normalizedUserId}" provider=${providerHint || "unknown"}`
     )
-    
-    // DEBUG: Write content to file
-    try {
-      const fs = require('fs');
-      const debugPath = require('path').join(process.cwd(), 'debug_crawled_content.txt');
-      fs.writeFileSync(debugPath, `--- ${new Date().toISOString()} ---\nURL: ${finalJobUrl}\n\nCONTENT:\n${finalPageContent}\n\n`);
-      console.log('Written debug content to ' + debugPath);
-    } catch (err) {
-      console.error('Failed to write debug file:', err);
-    }
 
     // Validate content length
     if (finalPageContent.length < 100) {
