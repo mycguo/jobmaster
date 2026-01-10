@@ -168,9 +168,10 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {applications.slice(0, 5).map((app, index) => (
-                <div
+                <Link
                   key={`${app.id}-${index}`}
-                  className="flex items-center justify-between py-3 border-b last:border-0"
+                  href={`/applications/${app.id}`}
+                  className="flex items-center justify-between py-3 border-b last:border-0 hover:bg-gray-50 -mx-6 px-6 transition-colors cursor-pointer"
                 >
                   <div>
                     <div className="font-medium">
@@ -195,7 +196,7 @@ export default async function DashboardPage() {
                       {app.status}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
             <div className="mt-4">

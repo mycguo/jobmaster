@@ -38,7 +38,8 @@
                 "https://www.linkedin.com/jobs/*"
             ],
             "js": [
-                "src/contentScript.js"
+                "src/contentScript.js",
+                "src/sidebar.js"
             ],
             "run_at": "document_idle"
         }

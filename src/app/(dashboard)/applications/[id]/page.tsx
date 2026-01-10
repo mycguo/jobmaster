@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { STATUS_DISPLAY, STATUS_EMOJI } from "@/types/application"
 import { TimelineSection } from "@/components/applications/timeline-section"
+import { DeleteButton } from "@/components/applications/delete-button"
 
 export default async function ApplicationDetailPage({
   params,
@@ -188,7 +189,7 @@ export default async function ApplicationDetailPage({
         <Button asChild>
           <Link href={`/applications/${id}/edit`}>✏️ Edit</Link>
         </Button>
-        <Button variant="outline">🗑️ Delete</Button>
+        <DeleteButton applicationId={application.id} companyName={application.company} />
       </div>
     </div>
   )
