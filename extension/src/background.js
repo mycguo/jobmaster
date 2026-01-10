@@ -152,5 +152,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true; // keep the channel open for async sendResponse
     }
 
+    if (message.type === 'FETCH_JOB_DETAILS') {
+        fetch(message.url)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.text();
+            })
+            .then(text => {
+                sendResponse({ success: true, data: text });
+            })
+            .catch(error => {
+                console.error('Job Tracker: fetch failed', error);
+                sendResponse({ success: false, error: error.message });
+            });
+        return true;
+    }
+
     return false;
 });

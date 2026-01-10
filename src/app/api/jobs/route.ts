@@ -80,6 +80,16 @@ export async function POST(req: NextRequest) {
     console.log(
       `Extension userId raw="${finalUserId}" normalized="${normalizedUserId}" provider=${providerHint || "unknown"}`
     )
+    
+    // DEBUG: Write content to file
+    try {
+      const fs = require('fs');
+      const debugPath = require('path').join(process.cwd(), 'debug_crawled_content.txt');
+      fs.writeFileSync(debugPath, `--- ${new Date().toISOString()} ---\nURL: ${finalJobUrl}\n\nCONTENT:\n${finalPageContent}\n\n`);
+      console.log('Written debug content to ' + debugPath);
+    } catch (err) {
+      console.error('Failed to write debug file:', err);
+    }
 
     // Validate content length
     if (finalPageContent.length < 100) {
@@ -87,6 +97,17 @@ export async function POST(req: NextRequest) {
         {
           success: false,
           error: `Insufficient content captured (${finalPageContent.length} chars). Please ensure you're on a job posting page and the extension has permission to access the content.`,
+        },
+        { status: 422, headers: corsHeaders }
+      )
+    }
+
+    // Check for "Loading job details" which indicates incomplete capture
+    if (finalPageContent.includes("Loading job details")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Job content is still loading. Please wait for the description to appear and try again.",
         },
         { status: 422, headers: corsHeaders }
       )

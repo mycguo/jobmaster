@@ -41,6 +41,15 @@ JSON:`
     response = await model.invoke(prompt)
     let content = response.content as string
 
+    // DEBUG: Write AI response to file
+    try {
+      const fs = require('fs');
+      const debugPath = require('path').join(process.cwd(), 'debug_ai_response.txt');
+      fs.writeFileSync(debugPath, `--- ${new Date().toISOString()} ---\nPROMPT:\n${prompt}\n\nRESPONSE:\n${content}\n\n`);
+    } catch (err) {
+      console.error('Failed to write debug file:', err);
+    }
+
     // Try to extract JSON from various formats
     let jsonContent = content.trim()
 

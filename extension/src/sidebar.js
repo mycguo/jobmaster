@@ -18,11 +18,11 @@
     function captureLinkedInJobContent() {
         console.log('[Job Tracker Sidebar] === Starting LinkedIn job content capture ===');
 
-        // Try to get the full job details content - this contains everything
+        // Try to get the full job details content
         const contentSelectors = [
-            '.jobs-details__main-content',  // Main content area with job details
-            '.jobs-description__content',    // Job description area
-            '.jobs-details',                 // Full job details section
+            '.jobs-description__content',    // Specific description (cleanest)
+            '.jobs-details__main-content',   // Main wrapper
+            '.jobs-details',                 // Full details
             '.job-view-layout',              // Job view container
             'main.jobs-search__job-details'  // Main job search details
         ];
@@ -30,23 +30,33 @@
         console.log('[Job Tracker Sidebar] Testing selectors...');
         for (const selector of contentSelectors) {
             const element = document.querySelector(selector);
-            console.log(`[Job Tracker Sidebar] Selector "${selector}":`, {
-                found: !!element,
-                hasInnerText: element ? !!element.innerText : false,
-                length: element?.innerText?.length || 0
-            });
+            
+            if (element) {
+                // Clone the element to manipulate it without affecting the page
+                const clone = element.cloneNode(true);
+                
+                // Remove our own sidebar if it's inside this element
+                const sidebarHost = clone.querySelector('#jt-card-host');
+                if (sidebarHost) {
+                    sidebarHost.remove();
+                }
 
-            if (element && element.innerText && element.innerText.length > 200) {
-                const content = element.innerText.trim();
-                console.log(`[Job Tracker Sidebar] ✓ SUCCESS - Captured ${content.length} characters using selector: ${selector}`);
-                console.log(`[Job Tracker Sidebar] Content preview (first 500 chars):`, content.substring(0, 500));
-                return content;
+                // Get clean text
+                const content = clone.innerText ? clone.innerText.trim() : '';
+
+                console.log(`[Job Tracker Sidebar] Selector "${selector}":`, {
+                    found: true,
+                    length: content.length
+                });
+
+                if (content.length > 200) {
+                    console.log(`[Job Tracker Sidebar] ✓ SUCCESS - Captured ${content.length} chars (cleaned)`);
+                    return content;
+                }
             }
         }
 
         console.error('[Job Tracker Sidebar] ✗ ERROR: Could not find job content with any selector');
-        console.log('[Job Tracker Sidebar] Current URL:', window.location.href);
-        console.log('[Job Tracker Sidebar] Document ready state:', document.readyState);
         return null;
     }
 
@@ -148,7 +158,7 @@
                     <div class="jt-brand">
                         <img src="${chrome.runtime.getURL('assets/icons/icon48.png')}" alt="Job Tracker" />
                         <div>
-                            <h2>Job Tracker</h2>
+                            <h2>Job Tracker v2</h2>
                             <p>Log this LinkedIn opportunity</p>
                         </div>
                     </div>
@@ -216,6 +226,28 @@
             chrome.storage.sync.set({ apiUserId: trimmed });
         });
 
+        // --- Background Fetch Helper ---
+        function extractJobId(url) {
+            const match = url.match(/currentJobId=(\d+)/) || 
+                          url.match(/\/jobs\/view\/(\d+)/) ||
+                          url.match(/\/jobs\/.*-(\d+)\?/);
+            return match ? match[1] : null;
+        }
+
+        function fetchJobDetailsContent(jobId) {
+            return new Promise((resolve) => {
+                const url = `https://www.linkedin.com/jobs/view/${jobId}/`;
+                chrome.runtime.sendMessage({ type: 'FETCH_JOB_DETAILS', url }, (response) => {
+                    if (chrome.runtime.lastError || !response || !response.success) {
+                        console.warn('Job Tracker: background fetch failed', chrome.runtime.lastError || response?.error);
+                        resolve(null);
+                        return;
+                    }
+                    resolve(response.data);
+                });
+            });
+        }
+
         saveBtn.addEventListener('click', async () => {
             const userId = userIdInput.value.trim();
             if (!userId) return;
@@ -228,42 +260,96 @@
             saveBtn.disabled = true;
             setStatus('Capturing job content...');
 
-            // Retry logic - wait for content to load
             let currentPageData = null;
-            let attempts = 0;
-            const maxAttempts = 5;
+            let usedBackgroundFetch = false;
 
-            while (attempts < maxAttempts) {
-                currentPageData = capturePageContent();
-
-                // Check if we got good content (not just navigation/header)
-                if (currentPageData &&
-                    currentPageData.fullText &&
-                    currentPageData.fullText.length > 1000 && // Need substantial content
-                    !currentPageData.fullText.includes('Loading job details')) { // Job must be loaded
-                    console.log(`[Job Tracker Sidebar] ✓ Content captured on attempt ${attempts + 1}`);
-                    break;
+            // 1. Try Background Fetch First
+            const jobId = extractJobId(window.location.href);
+            if (jobId) {
+                setStatus('Fetching canonical job page...');
+                console.log(`[Job Tracker Sidebar] Detected Job ID: ${jobId}, attempting background fetch...`);
+                const rawHtml = await fetchJobDetailsContent(jobId);
+                
+                if (rawHtml) {
+                    // Parse the HTML off-screen to get clean text
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(rawHtml, 'text/html');
+                    
+                    // Cleanup the parsed doc similarly to how we would a live page
+                    const scripts = doc.querySelectorAll('script, style, nav, header, footer');
+                    scripts.forEach(el => el.remove());
+                    
+                    const fullText = doc.body.innerText.trim();
+                    if (fullText.length > 500) {
+                        console.log('[Job Tracker Sidebar] ✓ Background fetch successful');
+                        currentPageData = {
+                            title: doc.title || document.title, // Fallback to current title
+                            url: `https://www.linkedin.com/jobs/view/${jobId}/`, // Canonical URL
+                            fullText: fullText,
+                            // Inherit identity from current session since background fetch is raw
+                            linkedinHandle: null, 
+                            linkedinMemberId: null
+                        };
+                        usedBackgroundFetch = true;
+                    }
                 }
-
-                console.log(`[Job Tracker Sidebar] Attempt ${attempts + 1}/${maxAttempts}: Content not ready (length: ${currentPageData?.fullText?.length || 0})`);
-
-                if (attempts < maxAttempts - 1) {
-                    setStatus(`Waiting for job to load... (${attempts + 1}/${maxAttempts})`);
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
-                }
-                attempts++;
             }
 
-            if (!currentPageData || !currentPageData.fullText || currentPageData.fullText.length < 500) { // Relaxed length check
+            // 2. Fallback to DOM Scraping (Existing Logic)
+            if (!currentPageData) {
+                console.log('[Job Tracker Sidebar] Background fetch failed or skipped, falling back to DOM scraping');
+                
+                let attempts = 0;
+                const maxAttempts = 10;
+
+                while (attempts < maxAttempts) {
+                    currentPageData = capturePageContent();
+
+                    if (currentPageData &&
+                        currentPageData.fullText &&
+                        currentPageData.fullText.length > 1000 &&
+                        !/Loading\s+job\s+details/i.test(currentPageData.fullText)) {
+                        console.log(`[Job Tracker Sidebar] ✓ DOM Content captured on attempt ${attempts + 1}`);
+                        break;
+                    }
+
+                    if (attempts < maxAttempts - 1) {
+                        setStatus(`Waiting for job to load... (${attempts + 1}/${maxAttempts})`);
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                    }
+                    attempts++;
+                }
+            }
+
+            // Identity injection for background fetched data
+            if (usedBackgroundFetch) {
+                 // Try to get identity from current DOM since background page won't have it
+                 const identity = capturePageContent(); 
+                 currentPageData.linkedinHandle = identity.linkedinHandle;
+                 currentPageData.linkedinMemberId = identity.linkedinMemberId;
+            }
+
+            // Final validation
+            const isLoading = /Loading\s+job\s+details/i.test(currentPageData?.fullText || '');
+            const isContentValid = currentPageData && 
+                                 currentPageData.fullText && 
+                                 currentPageData.fullText.length >= 500 && // Lower threshold for background fetch
+                                 !isLoading;
+
+            if (!isContentValid) {
                 saveBtn.disabled = false;
-                setStatus('Job content not loaded yet. Please wait for the job to fully load and try again.', 'error');
-                console.error('[Job Tracker Sidebar] Failed to capture content after', maxAttempts, 'attempts');
+                if (isLoading) {
+                    setStatus('Job still loading. Please wait a moment and try again.', 'warning');
+                } else {
+                    setStatus('Failed to capture job details. Please try again.', 'error');
+                }
                 return;
             }
 
-            console.log('[Job Tracker Sidebar] Captured fresh content:', {
+            console.log('[Job Tracker Sidebar] Final Payload Preview:', {
+                source: usedBackgroundFetch ? 'background_fetch' : 'dom_scrape',
                 length: currentPageData.fullText.length,
-                preview: currentPageData.fullText.substring(0, 300)
+                url: currentPageData.url
             });
 
             setStatus('Sending job to JobMaster...');
@@ -275,20 +361,11 @@
                 pageContent: currentPageData.fullText,
                 userId: userId,
                 notes: '',
-                authProvider: 'linkedin'
+                authProvider: 'linkedin',
+                captureSource: usedBackgroundFetch ? 'background' : 'dom'
             };
 
-            console.log('[Job Tracker Sidebar] Sending payload to API:', {
-                jobUrl: payload.jobUrl,
-                pageTitle: payload.pageTitle,
-                contentLength: payload.pageContent?.length,
-                contentPreview: payload.pageContent?.substring(0, 200),
-                userId: payload.userId
-            });
-
             chrome.runtime.sendMessage({ type: SAVE_EVENT, payload }, (response) => {
-                console.log('[Job Tracker Sidebar] API response:', response);
-
                 saveBtn.disabled = false;
                 if (response && response.success) {
                     setStatus('Job added successfully! 🎉', 'success');

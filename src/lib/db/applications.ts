@@ -113,8 +113,12 @@ export class ApplicationsDB {
     id: string,
     updates: UpdateApplicationInput
   ): Promise<Application | null> {
+    console.log(`[ApplicationsDB] Updating application ${id} with:`, updates)
     const app = await this.getApplication(id)
-    if (!app) return null
+    if (!app) {
+      console.log(`[ApplicationsDB] Application ${id} not found`)
+      return null
+    }
 
     const updated: Application = {
       ...app,
@@ -122,8 +126,17 @@ export class ApplicationsDB {
       updatedAt: new Date().toISOString(),
     }
 
-    // Sync to vector store
+    console.log(`[ApplicationsDB] Updated application:`, {
+      id: updated.id,
+      status: updated.status,
+      company: updated.company,
+      role: updated.role,
+    })
+
+    // Upsert to vector store (delete old + insert new)
     await this.syncToVectorStore(updated)
+
+    console.log(`[ApplicationsDB] Successfully synced to vector store`)
 
     return updated
   }
@@ -262,7 +275,7 @@ ${app.notes ? `Notes: ${app.notes}` : ""}
       source: "job_application",
     }
 
-    // Add to vector store
-    await this.vectorStore.addTexts([text], [metadata])
+    // Upsert to vector store (delete old + insert new)
+    await this.vectorStore.upsertRecord(text, metadata)
   }
 }
