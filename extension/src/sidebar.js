@@ -382,6 +382,10 @@
         const url = location.href;
         if (url !== lastUrl) {
             lastUrl = url;
+            // Force removal of existing card to reset state for new job
+            const existing = document.querySelector('#jt-card-host');
+            if (existing) existing.remove();
+            
             setTimeout(injectCard, 1000); // Wait for page load
         } else if (!document.querySelector('#jt-card-host')) {
             // Also try to inject if content is missing
