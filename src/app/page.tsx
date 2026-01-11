@@ -3,6 +3,8 @@
  */
 
 import Link from "next/link"
+import Image from "next/image"
+import buyMeACoffeeQR from "@/../assets/buymeacoffee_qr.png"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -14,15 +16,18 @@ import {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-[#FDFBF7]">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 text-[#0f3f2e]">
             <span className="text-2xl">🎯</span>
             <span className="text-xl font-bold">Job Search Agent</span>
           </div>
           <div className="space-x-4">
+            <Button variant="ghost" asChild>
+              <Link href="/how-it-works">How it Works</Link>
+            </Button>
             <Button variant="ghost" asChild>
               <Link href="/login">Log In</Link>
             </Button>
@@ -35,9 +40,9 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-5xl font-bold tracking-tight mb-6">
+        <h1 className="text-5xl font-bold tracking-tight mb-6 text-[#0f3f2e]">
           Your AI-Powered <br />
-          <span className="text-blue-600">Career Companion</span>
+          <span className="text-[#1d684e]">Career Companion</span>
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Track applications, prepare for interviews, and manage your entire
@@ -48,7 +53,7 @@ export default function HomePage() {
             <Link href="/login">Start Free</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link href="#features">Learn More</Link>
+            <Link href="/how-it-works">How it Works</Link>
           </Button>
         </div>
       </section>
@@ -59,15 +64,16 @@ export default function HomePage() {
           Everything You Need to Land Your Dream Job
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
-          <Card>
+          {/* Card 1: Pink Theme */}
+          <Card className="bg-[#FFF5F9] border-[#FCC8DF] hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle>📝 Application Tracking</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[#9D174D]">📝 Application Tracking</CardTitle>
+              <CardDescription className="text-[#BE185D]">
                 Manage all your applications in one place
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-[#831843]">
                 <li>• Visual Kanban board</li>
                 <li>• Status tracking</li>
                 <li>• Timeline events</li>
@@ -76,15 +82,16 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Card 2: Purple Theme */}
+          <Card className="bg-[#EEF2FF] border-[#C7D2FE] hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle>🤖 AI-Powered Analysis</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[#4338CA]">🤖 AI-Powered Analysis</CardTitle>
+              <CardDescription className="text-[#4F46E5]">
                 Get intelligent insights on every job
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-[#3730A3]">
                 <li>• Job match scoring</li>
                 <li>• Requirements extraction</li>
                 <li>• Cover letter generation</li>
@@ -93,15 +100,16 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Card 3: Pink Theme */}
+          <Card className="bg-[#FFF5F9] border-[#FCC8DF] hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle>📊 Analytics & Insights</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[#9D174D]">📊 Analytics & Insights</CardTitle>
+              <CardDescription className="text-[#BE185D]">
                 Track your progress with detailed metrics
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-[#831843]">
                 <li>• Response rates</li>
                 <li>• Interview conversion</li>
                 <li>• Application timeline</li>
@@ -110,15 +118,16 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Card 4: Purple Theme */}
+          <Card className="bg-[#EEF2FF] border-[#C7D2FE] hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle>🎤 Interview Prep</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[#4338CA]">🎤 Interview Prep</CardTitle>
+              <CardDescription className="text-[#4F46E5]">
                 Build your interview question bank
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-[#3730A3]">
                 <li>• Question library</li>
                 <li>• Practice sessions</li>
                 <li>• Company research</li>
@@ -127,15 +136,16 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Card 5: Pink Theme */}
+          <Card className="bg-[#FFF5F9] border-[#FCC8DF] hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle>📄 Resume Management</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[#9D174D]">📄 Resume Management</CardTitle>
+              <CardDescription className="text-[#BE185D]">
                 Organize and version your resumes
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-[#831843]">
                 <li>• Multiple versions</li>
                 <li>• Tailored resumes</li>
                 <li>• Quick access</li>
@@ -144,15 +154,16 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Card 6: Purple Theme */}
+          <Card className="bg-[#EEF2FF] border-[#C7D2FE] hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle>🔌 Browser Extension</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[#4338CA]">🔌 Browser Extension</CardTitle>
+              <CardDescription className="text-[#4F46E5]">
                 Save jobs directly from LinkedIn
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-[#3730A3]">
                 <li>• One-click save</li>
                 <li>• Auto-extract details</li>
                 <li>• Instant sync</li>
@@ -167,15 +178,38 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-20 text-center">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-3xl">Ready to Get Started?</CardTitle>
+            <CardTitle className="text-3xl">Support Development</CardTitle>
             <CardDescription className="text-lg">
-              Join thousands of job seekers using AI to land their dream jobs
+              Help us keep the servers running and the features coming
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button size="lg" asChild>
-              <Link href="/login">Start Your Job Search</Link>
-            </Button>
+            <div className="pt-4 text-center space-y-3">
+              <p className="text-sm font-semibold text-[#0f3f2e]">
+                <span className="opacity-70">Support </span>
+                <span className="text-[#1d684e]">development</span>
+                <span className="opacity-70"> &amp; </span>
+                <span className="text-[#1d684e]">hosting</span>
+              </p>
+              <div className="flex justify-center">
+                <Image
+                  src={buyMeACoffeeQR}
+                  alt="Buy Me a Coffee QR"
+                  width={150}
+                  height={150}
+                  className="rounded-md border"
+                  priority
+                />
+              </div>
+              <Link
+                href={`https://www.buymeacoffee.com/${process.env.BUYMEACOFFEE_USERNAME || "yourusername"}`}
+                className="inline-flex items-center justify-center rounded-md border border-yellow-400 bg-yellow-300/80 px-4 py-2 text-sm font-semibold text-yellow-900 hover:bg-yellow-300"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ☕ Buy Me a Coffee
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </section>

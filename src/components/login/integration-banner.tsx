@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 type Logo = {
   label: string
   render: () => JSX.Element
@@ -214,12 +216,12 @@ export function IntegrationBanner() {
           Capture leads from the LinkedIn extension, keep every stage in sync, and
           stay aligned across your entire job search workflow.
         </p>
-        <a
-          href="#sign-in"
+        <Link
+          href="/how-it-works"
           className="inline-flex items-center justify-center rounded-full bg-[#0f3f2e] px-6 py-3 text-sm font-semibold text-white shadow-lg"
         >
           See how it works
-        </a>
+        </Link>
       </div>
     </div>
   )
