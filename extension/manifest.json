@@ -23,7 +23,6 @@
     },
     "permissions": [
         "activeTab",
-        "scripting",
         "tabs",
         "storage"
     ],
